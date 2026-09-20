@@ -9,17 +9,18 @@ import OfflineMeshVisualizer from './components/OfflineMeshVisualizer';
 import SitrepExport from './components/SitrepExport';
 import MobileQrModal from './components/MobileQrModal';
 
-import { DISASTER_SCENARIOS } from './services/disasterData';
-import { calculateSafeRoute, findNearestReliefHub } from './services/routingEngine';
+import { DISASTER_SCENARIOS, GLOBAL_RELIEF_REGISTRY } from './services/disasterData';
+import { calculateSafeRoute, findNearestReliefHub, calculateDistance } from './services/routingEngine';
 import { calculateUrgencyScore, rankIncidentsByUrgency } from './services/triageEngine';
 import { playDispatchAck, playSuccessChime, playSosAlert } from './services/audioAlerts';
 
 export default function App() {
   const [viewMode, setViewMode] = useState('command'); // 'command' | 'mobile'
-  // Default to Bengaluru Urban Scenario
-  const [activeScenarioKey, setActiveScenarioKey] = useState('bengaluru_urban');
   
-  const currentScenario = DISASTER_SCENARIOS[activeScenarioKey] || DISASTER_SCENARIOS.bengaluru_urban;
+  // DEFAULT: High-Visual Brahmaputra Basin River Flood Scenario (Eye-catcher for judges)
+  const [activeScenarioKey, setActiveScenarioKey] = useState('flood_brahmaputra');
+  
+  const currentScenario = DISASTER_SCENARIOS[activeScenarioKey] || DISASTER_SCENARIOS.flood_brahmaputra;
 
   const [incidents, setIncidents] = useState(currentScenario.initialIncidents || []);
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -56,16 +57,30 @@ export default function App() {
     playSosAlert();
     setIncidents(prev => rankIncidentsByUrgency([newIncident, ...prev]));
     
-    // SMART LOCAL AUTO-ANCHOR: Find the nearest relief hub in the current sector
-    const nearest = findNearestReliefHub(newIncident.location, currentScenario.reliefHubs || []);
-    const bestHub = nearest?.nearestHub || currentScenario.reliefHubs?.[0];
+    // DYNAMIC AUTO-RELIEF LOCATOR:
+    // If the SOS is received in Bengaluru coordinates (~12-13 Lat), auto-switch to Bengaluru scenario
+    const [lat, lng] = newIncident.location;
+    if (lat > 12.0 && lat < 13.8 && lng > 76.5 && lng < 78.5) {
+      if (activeScenarioKey !== 'bengaluru_urban') {
+        setActiveScenarioKey('bengaluru_urban');
+      }
+    } else if (lat > 12.5 && lat < 13.5 && lng > 79.8 && lng < 80.8) {
+      if (activeScenarioKey !== 'cyclone_chennai') {
+        setActiveScenarioKey('cyclone_chennai');
+      }
+    }
+
+    // Find nearest relief hub in the active/target sector
+    const scenarioToUse = (lat > 12.0 && lat < 13.8) ? DISASTER_SCENARIOS.bengaluru_urban : currentScenario;
+    const nearest = findNearestReliefHub(newIncident.location, scenarioToUse.reliefHubs || []);
+    const bestHub = nearest?.nearestHub || scenarioToUse.reliefHubs?.[0];
     
     setSelectedHub(bestHub);
     setSelectedIncident(newIncident);
 
     // Compute route with nearest hub immediately
     if (bestHub && newIncident) {
-      const route = calculateSafeRoute(bestHub, newIncident, currentScenario);
+      const route = calculateSafeRoute(bestHub, newIncident, scenarioToUse);
       setActiveRoute(route);
     }
   };
@@ -169,11 +184,11 @@ export default function App() {
         </div>
       ) : (
         /* MISSION CONTROL COMMAND HUB (Desktop / Laptop View) */
-        <main className="flex-1 p-3 lg:p-4 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4">
+        <main className="flex-1 p-2 sm:p-3 lg:p-4 max-w-[1700px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4">
           
           {/* LEFT 7 COLS: High-Resolution Satellite GIS Map & Safe Corridor */}
-          <div className="lg:col-span-7 flex flex-col gap-3 min-h-[550px]">
-            <div className="flex-1 h-full min-h-[450px]">
+          <div className="lg:col-span-7 flex flex-col gap-3 min-h-[500px]">
+            <div className="flex-1 h-full min-h-[420px]">
               <SatelliteMap
                 scenario={currentScenario}
                 incidents={incidents}
@@ -200,7 +215,7 @@ export default function App() {
           <div className="lg:col-span-5 flex flex-col gap-3">
             
             {/* AI Geo-Triage Priority Feed */}
-            <div className="h-[440px]">
+            <div className="h-[430px]">
               <TriageMatrix
                 incidents={incidents}
                 selectedIncident={selectedIncident}
