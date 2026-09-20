@@ -102,21 +102,9 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Right Actions: Presentation, Protocols, Mode Switcher, SITREP, QR Code, Sound */}
+        {/* Right Actions: Protocols, Mode Switcher, SITREP, QR Code, Sound */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           
-          {/* Pitch Deck PPT Presentation Link */}
-          <a
-            href="/presentation.html"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all shrink-0"
-            title="Open Official 7-Slide Pitch Deck (PPT)"
-          >
-            <Presentation className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden lg:inline">Pitch Slides</span>
-          </a>
-
           {/* Disaster Protocol Guide Button */}
           <button
             onClick={onOpenGuideModal}
