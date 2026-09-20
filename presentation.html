@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResQ-Grid AI 🚨 | Official Hackathon Pitch Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070d18;
+      --card-bg: #0f192c;
+      --border: #1e2d46;
+      --primary: #ef4444;
+      --accent: #8b5cf6;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    .deck-container {
+      width: 100%;
+      max-width: 1000px;
+      min-height: 600px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide {
+      display: none;
+      padding: 48px;
+      flex: 1;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .slide.active { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .slide-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .slide-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1.2;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 24px;
+    }
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p, .card li {
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    ul { list-style-position: inside; }
+    li { margin-bottom: 6px; }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 48px;
+      background: #091120;
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #334155;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #334155; }
+    .btn-primary {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      border-color: #ef4444;
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .controls { display: none; }
+      .deck-container { box-shadow: none; border: none; max-width: 100%; }
+      .slide { display: flex !important; page-break-after: always; padding: 30px; background: #fff; color: #000; border: 1px solid #ddd; border-radius: 12px; margin-bottom: 20px; }
+      h1, h2, .card h3 { color: #000 !important; -webkit-text-fill-color: initial !important; }
+      .card { background: #f8fafc; border-color: #cbd5e1; }
+      .card p, .card li { color: #334155 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+    
+    <!-- SLIDE 1: PROBLEM STATEMENT -->
+    <div class="slide active" id="slide-1">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">1. Problem Statement</span>
+          <span class="slide-number">Slide 01 / 07</span>
+        </div>
+        <h1>Disaster Response Breakdown</h1>
+        <h2>The Life-or-Death Bottleneck in Emergency Coordination</h2>
+        <div class="content-grid">
+          <div class="card" style="border-left: 4px solid #ef4444;">
+            <h3>🚨 Helpline Congestion & Blackouts</h3>
+            <p>During floods and cyclones, cellular towers fail. Traditional 112 emergency helplines get overwhelmed by thousands of unstructured calls with 0% geospatial visibility.</p>
+          </div>
+          <div class="card" style="border-left: 4px solid #f97316;">
+            <h3>🌊 Static Maps Fail in Dynamic Floods</h3>
+            <p>Standard GPS navigation apps do not track rising flood depths, collapsed bridges, or submerged transformers, causing rescue boats and ambulances to get trapped.</p>
+          </div>
+          <div class="card" style="border-left: 4px solid #eab308;">
+            <h3>⏳ The Lost "Golden Hour"</h3>
+            <p>First responders lack explainable triage priority. Critical infants, pregnant mothers, and hemorrhage trauma victims are delayed while minor requests are processed.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: PROPOSED SOLUTION -->
+    <div class="slide" id="slide-2">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">2. Proposed Solution</span>
+          <span class="slide-number">Slide 02 / 07</span>
+        </div>
+        <h1>ResQ-Grid AI</h1>
+        <h2>Autonomous Disaster Response & Satellite Relief Coordinator</h2>
+        <div class="content-grid">
+          <div class="card">
+            <h3>📱 Zero-Internet Civilian SOS Portal</h3>
+            <p>1-tap emergency beacon, live GPS lock, real camera damage uploader, and microphone voice note recorder with offline P2P mesh relaying.</p>
+          </div>
+          <div class="card">
+            <h3>🛰️ High-Res Satellite GIS Mission Control</h3>
+            <p>Real-time Esri World Imagery with dynamic flood depth contours (0.6m - 2.8m), active boat/drone tracking, and weather radar.</p>
+          </div>
+          <div class="card">
+            <h3>🧭 A* Dynamic Safe-Corridor Router</h3>
+            <p>Calculates obstacle-free rescue paths avoiding submerged bridges and high-voltage hazards with instant turn-by-turn routing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: TARGET USERS -->
+    <div class="slide" id="slide-3">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">3. Target Users</span>
+          <span class="slide-number">Slide 03 / 07</span>
+        </div>
+        <h1>Who We Build For</h1>
+        <h2>Multi-Stakeholder Emergency Ecosystem</h2>
+        <div class="content-grid">
+          <div class="card">
+            <h3>👥 Stranded Disaster Victims</h3>
+            <p>Civilians in crisis zones who need instant, panic-free SOS broadcast with zero internet dependency and multi-modal voice/photo capture.</p>
+          </div>
+          <div class="card">
+            <h3>🚤 First Responders (NDRF / SDRF)</h3>
+            <p>Field squads needing real-time obstacle avoidance, survivor headcounts, and direct audio distress playback before deployment.</p>
+          </div>
+          <div class="card">
+            <h3>🏢 Operations Center Commanders</h3>
+            <p>Disaster management authorities (SDMA, FEMA, Red Cross) managing shelter capacity, blood units, and 1-click SITREP reports.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: TECHNICAL APPROACH -->
+    <div class="slide" id="slide-4">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">4. Technical Approach</span>
+          <span class="slide-number">Slide 04 / 07</span>
+        </div>
+        <h1>End-to-End Technology Stack</h1>
+        <h2>Resilient, Low-Latency Edge Architecture</h2>
+        <div class="content-grid">
+          <div class="card">
+            <h3>💻 Frontend & GIS Engine</h3>
+            <p>React 19 + Vite + Tailwind CSS + Leaflet.js with Esri ArcGIS Satellite Tile servers and custom GeoJSON inundation depth vectors.</p>
+          </div>
+          <div class="card">
+            <h3>📡 Hop-to-Hop Mesh Relay</h3>
+            <p>P2P BroadcastChannel protocol with automatic deduplication, hop-count decrementing (5 hops), and local IndexedDB outbox queue.</p>
+          </div>
+          <div class="card">
+            <h3>🧠 Explainable AI & DSP Audio</h3>
+            <p>Multi-factor severity scoring algorithm (0-100) + Web Audio API tactical sonar synthesizer + HTML5 MediaRecorder hardware audio.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: MARKET & BUSINESS POTENTIAL -->
+    <div class="slide" id="slide-5">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">5. Market & Business Potential</span>
+          <span class="slide-number">Slide 05 / 07</span>
+        </div>
+        <h1>Market Opportunity & Impact</h1>
+        <h2>Global Humanitarian SaaS & Civic Defense</h2>
+        <div class="content-grid">
+          <div class="card">
+            <h3>📊 $31.5B Market Size</h3>
+            <p>Global Disaster Preparedness & Emergency Management SaaS market growing at 8.4% CAGR.</p>
+          </div>
+          <div class="card">
+            <h3>🏛️ B2G Government Contracts</h3>
+            <p>Annual SaaS licenses for State Disaster Management Authorities (KSDMA/ASDMA), Municipalities (BBMP), and NDRF battalions.</p>
+          </div>
+          <div class="card">
+            <h3>⚡ 65% Latency Reduction</h3>
+            <p>Cuts emergency dispatch response time from 45 mins to under 15 mins, directly maximizing golden-hour survival rates.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: SCALABILITY & FUTURE -->
+    <div class="slide" id="slide-6">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">6. Scalability & Future</span>
+          <span class="slide-number">Slide 06 / 07</span>
+        </div>
+        <h1>Scalability & Roadmap</h1>
+        <h2>Expanding from Web to Global Defense Mesh</h2>
+        <div class="content-grid">
+          <div class="card">
+            <h3>📻 LoRaWAN Physical Mesh Hardware</h3>
+            <p>Integration with $15 off-the-shelf LoRa radio transceivers for 15km zero-cellular radio propagation.</p>
+          </div>
+          <div class="card">
+            <h3>🛸 Autonomous Drone Autopilot</h3>
+            <p>Direct MAVLink telemetry API to automatically dispatch autonomous medical supply drop drones along the computed A* safe corridors.</p>
+          </div>
+          <div class="card">
+            <h3>🛰️ Sentinel-1 Satellite SAR Feeds</h3>
+            <p>Automated real-time satellite radar flood boundary segmentation updated every 6 hours from NASA/ESA Copernicus.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: IF WE HAD MORE TIME -->
+    <div class="slide" id="slide-7">
+      <div>
+        <div class="slide-header">
+          <span class="slide-badge">7. Next Steps</span>
+          <span class="slide-number">Slide 07 / 07</span>
+        </div>
+        <h1>If We Had More Time</h1>
+        <h2>Upcoming Capabilities & Vision</h2>
+        <div class="content-grid">
+          <div class="card">
+            <h3>1. WebBluetooth Physical Dongle Driver</h3>
+            <p>Direct browser pairing with BLE emergency wristbands and beacons for unconscious survivor telemetry.</p>
+          </div>
+          <div class="card">
+            <h3>2. On-Device Edge Vision Damage AI</h3>
+            <p>In-browser TensorFlow/OpenCV model to automatically classify rooftop entrapment and structural cracks from uploaded photos.</p>
+          </div>
+          <div class="card">
+            <h3>3. SMS Twilio Two-Way Fallback Bridge</h3>
+            <p>Automated bidirectional SMS parsing for basic 2G feature phones into the GIS mission matrix.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAVIGATION CONTROLS -->
+    <div class="controls">
+      <button class="btn" onclick="prevSlide()">← Previous</button>
+      <span id="slide-indicator" style="font-family: 'JetBrains Mono'; font-size: 13px; color: var(--muted);">Slide 1 of 7</span>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+        <button class="btn btn-primary" onclick="nextSlide()">Next →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 7;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      currentSlide = index;
+
+      for (let i = 1; i <= totalSlides; i++) {
+        const el = document.getElementById('slide-' + i);
+        if (el) el.classList.remove('active');
+      }
+      const activeEl = document.getElementById('slide-' + currentSlide);
+      if (activeEl) activeEl.classList.add('active');
+
+      document.getElementById('slide-indicator').textContent = `Slide ${currentSlide} of ${totalSlides}`;
+    }
+
+    function nextSlide() { showSlide(currentSlide + 1); }
+    function prevSlide() { showSlide(currentSlide - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+
+</body>
+</html>

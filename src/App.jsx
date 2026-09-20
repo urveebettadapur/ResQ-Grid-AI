@@ -6,8 +6,10 @@ import TriageMatrix from './components/TriageMatrix';
 import RouteOptimizer from './components/RouteOptimizer';
 import ResourceInventory from './components/ResourceInventory';
 import OfflineMeshVisualizer from './components/OfflineMeshVisualizer';
+import HopRelayTerminal from './components/HopRelayTerminal';
 import SitrepExport from './components/SitrepExport';
 import MobileQrModal from './components/MobileQrModal';
+import DisasterGuideModal from './components/DisasterGuideModal';
 
 import { DISASTER_SCENARIOS, GLOBAL_RELIEF_REGISTRY } from './services/disasterData';
 import { calculateSafeRoute, findNearestReliefHub, calculateDistance } from './services/routingEngine';
@@ -30,6 +32,7 @@ export default function App() {
   const [isSimulatedOffline, setIsSimulatedOffline] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isSitrepModalOpen, setIsSitrepModalOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   // Sync state when scenario changes
   useEffect(() => {
@@ -52,35 +55,37 @@ export default function App() {
     }
   }, []);
 
-  // Handle incoming SOS Broadcast (from Mobile view)
+  // Handle incoming SOS Broadcast (from Mobile view or Hop2Hop Mesh)
   const handleSubmitSOS = (newIncident) => {
     playSosAlert();
     setIncidents(prev => rankIncidentsByUrgency([newIncident, ...prev]));
     
     // DYNAMIC AUTO-RELIEF LOCATOR:
-    // If the SOS is received in Bengaluru coordinates (~12-13 Lat), auto-switch to Bengaluru scenario
     const [lat, lng] = newIncident.location;
+    let targetScenario = currentScenario;
+
     if (lat > 12.0 && lat < 13.8 && lng > 76.5 && lng < 78.5) {
       if (activeScenarioKey !== 'bengaluru_urban') {
         setActiveScenarioKey('bengaluru_urban');
       }
+      targetScenario = DISASTER_SCENARIOS.bengaluru_urban;
     } else if (lat > 12.5 && lat < 13.5 && lng > 79.8 && lng < 80.8) {
       if (activeScenarioKey !== 'cyclone_chennai') {
         setActiveScenarioKey('cyclone_chennai');
       }
+      targetScenario = DISASTER_SCENARIOS.cyclone_chennai;
     }
 
     // Find nearest relief hub in the active/target sector
-    const scenarioToUse = (lat > 12.0 && lat < 13.8) ? DISASTER_SCENARIOS.bengaluru_urban : currentScenario;
-    const nearest = findNearestReliefHub(newIncident.location, scenarioToUse.reliefHubs || []);
-    const bestHub = nearest?.nearestHub || scenarioToUse.reliefHubs?.[0];
+    const nearest = findNearestReliefHub(newIncident.location, targetScenario.reliefHubs || []);
+    const bestHub = nearest?.nearestHub || targetScenario.reliefHubs?.[0];
     
     setSelectedHub(bestHub);
     setSelectedIncident(newIncident);
 
     // Compute route with nearest hub immediately
     if (bestHub && newIncident) {
-      const route = calculateSafeRoute(bestHub, newIncident, scenarioToUse);
+      const route = calculateSafeRoute(bestHub, newIncident, targetScenario);
       setActiveRoute(route);
     }
   };
@@ -171,6 +176,7 @@ export default function App() {
         criticalCount={criticalCount}
         onOpenQrModal={() => setIsQrModalOpen(true)}
         onOpenSitrepModal={() => setIsSitrepModalOpen(true)}
+        onOpenGuideModal={() => setIsGuideModalOpen(true)}
       />
 
       {/* Main View Switcher */}
@@ -211,7 +217,7 @@ export default function App() {
             />
           </div>
 
-          {/* RIGHT 5 COLS: AI Triage Matrix, Inventory & Offline Mesh */}
+          {/* RIGHT 5 COLS: AI Triage Matrix, Hop2Hop Relay Terminal & Resource Inventory */}
           <div className="lg:col-span-5 flex flex-col gap-3">
             
             {/* AI Geo-Triage Priority Feed */}
@@ -225,10 +231,10 @@ export default function App() {
               />
             </div>
 
-            {/* Offline Mesh Relay Simulator */}
-            <OfflineMeshVisualizer
+            {/* Real Hop-to-Hop Mesh Relay Terminal */}
+            <HopRelayTerminal
+              onRelayPacketToCentral={handleSubmitSOS}
               isSimulatedOffline={isSimulatedOffline}
-              onSyncOfflinePackets={handleSyncOfflinePackets}
             />
 
             {/* Resource Inventory & Shelter Balancer */}
@@ -240,7 +246,7 @@ export default function App() {
         </main>
       )}
 
-      {/* Modals: Official SITREP Report & Mobile QR Code */}
+      {/* Modals: Official SITREP Report, Mobile QR Code & Disaster Protocols Guide */}
       <SitrepExport
         scenario={currentScenario}
         incidents={incidents}
@@ -251,6 +257,11 @@ export default function App() {
       <MobileQrModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
+      />
+
+      <DisasterGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
       />
 
     </div>

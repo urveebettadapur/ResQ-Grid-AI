@@ -16,36 +16,23 @@ import {
 export default function MobileQrModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
-  // Detected Wi-Fi IP: 10.84.160.220
+  // Real Deployed Vercel URL
+  const deployedCloudUrl = 'https://res-q-grid-ai-iota.vercel.app/?mode=mobile';
   const defaultNetworkUrl = 'http://10.84.160.220:5173/?mode=mobile';
-  const [selectedUrl, setSelectedUrl] = useState(defaultNetworkUrl);
+
+  // Default to the live Cloud URL so scanning works everywhere (cellular, any Wi-Fi)
+  const [selectedUrl, setSelectedUrl] = useState(deployedCloudUrl);
   const [copied, setCopied] = useState(false);
-  const [customIp, setCustomIp] = useState('10.84.160.220');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      const port = window.location.port ? `:${window.location.port}` : '';
-      const protocol = window.location.protocol;
-      
-      // If opened on localhost, automatically suggest the real Wi-Fi IP so phones can connect
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        setSelectedUrl(`http://10.84.160.220${port}/?mode=mobile`);
-      } else {
-        setSelectedUrl(`${protocol}//${hostname}${port}/?mode=mobile`);
-      }
-    }
-  }, []);
+    // Keep deployed URL as default for universal mobile scanning
+    setSelectedUrl(deployedCloudUrl);
+  }, [isOpen]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleIpChange = (newIp) => {
-    setCustomIp(newIp);
-    setSelectedUrl(`http://${newIp}:5173/?mode=mobile`);
   };
 
   return (
@@ -71,30 +58,30 @@ export default function MobileQrModal({ isOpen, onClose }) {
           </div>
           <h2 className="font-extrabold text-lg text-white">Live Mobile SOS on Your Phone</h2>
           <p className="text-xs text-slate-400 max-w-xs">
-            Scan this QR code with your phone camera (or mobile scanner) to open the <strong>Civilian SOS App</strong> on your phone!
+            Scan this QR code with your phone camera to launch the live <strong>Civilian SOS App</strong> instantly!
           </p>
         </div>
 
         {/* Network Mode Switcher */}
         <div className="mt-4 flex items-center justify-center gap-2 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs">
           <button
-            onClick={() => setSelectedUrl('http://10.84.160.220:5173/?mode=mobile')}
-            className={`flex items-center gap-1 px-3 py-1 rounded-lg font-medium transition ${
-              selectedUrl.includes('10.84.160.220') ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Wifi className="w-3.5 h-3.5" />
-            <span>Wi-Fi Network (Local)</span>
-          </button>
-          
-          <button
-            onClick={() => setSelectedUrl('https://resq-grid-ai.vercel.app/?mode=mobile')}
-            className={`flex items-center gap-1 px-3 py-1 rounded-lg font-medium transition ${
-              selectedUrl.includes('vercel.app') ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setSelectedUrl(deployedCloudUrl)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition ${
+              selectedUrl.includes('vercel.app') ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>Cloud URL</span>
+            <span>⚡ Live Cloud (Vercel)</span>
+          </button>
+
+          <button
+            onClick={() => setSelectedUrl(defaultNetworkUrl)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition ${
+              selectedUrl.includes('10.84.160.220') ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Wifi className="w-3.5 h-3.5" />
+            <span>Local Wi-Fi</span>
           </button>
         </div>
 
@@ -102,7 +89,7 @@ export default function MobileQrModal({ isOpen, onClose }) {
         <div className="mt-4 p-4 rounded-2xl bg-white shadow-2xl inline-block border-4 border-purple-500/40">
           <QRCodeSVG 
             value={selectedUrl} 
-            size={180}
+            size={185}
             level="H"
             includeMargin={false}
           />
@@ -127,16 +114,16 @@ export default function MobileQrModal({ isOpen, onClose }) {
         <div className="mt-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/80 text-left text-xs space-y-1">
           <div className="font-bold text-purple-300 flex items-center gap-1 text-[11px]">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Instructions for Testing on Mobile:</span>
+            <span>Instant Live Testing:</span>
           </div>
           <p className="text-slate-300 text-[11px]">
-            1. Ensure your phone is on the <strong>same Wi-Fi network / Hotspot</strong> as your laptop.
+            1. Open Camera on your phone and point at the QR code.
           </p>
           <p className="text-slate-300 text-[11px]">
-            2. Point your camera at the QR code and tap the link.
+            2. Tap the link to launch the <strong>ResQ-Grid Civilian Portal</strong>.
           </p>
           <p className="text-slate-300 text-[11px]">
-            3. Tap <strong>Broadcast Emergency SOS</strong> on your phone $\to$ watch the <strong>Satellite Mission Control map flash and update live!</strong>
+            3. Tap <strong>Broadcast Emergency SOS</strong> $\to$ watch the <strong>Satellite Mission Control map flash and update live!</strong>
           </p>
         </div>
 

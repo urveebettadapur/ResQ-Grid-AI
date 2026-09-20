@@ -21,11 +21,13 @@ import {
   Trash2,
   Play,
   Pause,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Repeat
 } from 'lucide-react';
 import { playSosAlert, playSuccessChime } from '../services/audioAlerts';
 import { saveToOfflineQueue, getOfflineQueue, getMeshPeerCount } from '../services/offlineStorage';
 import { calculateUrgencyScore } from '../services/triageEngine';
+import { hopRelayManager } from '../services/hopRelayEngine';
 
 export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, setIsSimulatedOffline }) {
   const [category, setCategory] = useState('TRAPPED_WATER');
@@ -33,11 +35,11 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
   const [childrenCount, setChildrenCount] = useState(1);
   const [infants, setInfants] = useState(0);
   const [medicalNote, setMedicalNote] = useState('');
-  const [waterDepth, setWaterDepth] = useState('1.8m (Chest deep water)');
+  const [waterDepth, setWaterDepth] = useState('2.0m (Rooftop retreat)');
   
   // Geolocation states (Defaults to dynamic GPS)
-  const [coords, setCoords] = useState([12.9716, 77.5946]); // Bengaluru default
-  const [address, setAddress] = useState('Bengaluru Metro Area, Karnataka');
+  const [coords, setCoords] = useState([26.1950, 91.7580]); // Brahmaputra default
+  const [address, setAddress] = useState('Kamrup Metro Sector, Near Riverbank');
   const [isLocating, setIsLocating] = useState(false);
   const [gpsAccuracy, setGpsAccuracy] = useState('± 3 meters');
 
@@ -57,6 +59,7 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
   const [activeBroadcast, setActiveBroadcast] = useState(null);
   const [offlineQueue, setOfflineQueue] = useState([]);
   const [peerCount, setPeerCount] = useState(4);
+  const [myNodeId, setMyNodeId] = useState(hopRelayManager.deviceId);
 
   // Fetch real device GPS on initial mount
   useEffect(() => {
@@ -118,7 +121,6 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioBlobUrl(url);
-        // Stop all audio tracks
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -149,24 +151,28 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
     setRecordingSeconds(0);
   };
 
-  // Trigger SOS Beacon Broadcast
+  // Trigger SOS Beacon Broadcast via Hop2Hop Mesh Engine
   const handleBroadcastSOS = () => {
     playSosAlert();
 
     const newIncident = {
-      id: `SOS-LIVE-${Math.floor(1000 + Math.random() * 9000)}`,
+      sos_id: `SOS-MESH-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `SOS-MESH-${Math.floor(1000 + Math.random() * 9000)}`,
       timestamp: 'Just now',
       location: coords,
+      latitude: coords[0],
+      longitude: coords[1],
       address,
       category,
+      emergency_type: category,
       headcount: { adults, children: childrenCount, infants, pets: 0 },
       waterDepth,
       medicalCondition: medicalNote || 'Immediate evacuation & relief required',
-      reporter: 'Live Citizen User',
+      reporter: `Citizen (${myNodeId})`,
       phone: '+91-98800-XXXXX',
       status: 'PENDING',
-      isLiveUserSOS: true, // Flags this as an actual real citizen distress beacon
-      meshHops: isSimulatedOffline ? Math.floor(1 + Math.random() * 3) : 0,
+      isLiveUserSOS: true,
+      meshHops: isSimulatedOffline ? 3 : 0,
       photo: photoDataUrl,
       audioNoteUrl: audioBlobUrl
     };
@@ -176,6 +182,9 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
     newIncident.urgencyScore = triageResult.urgencyScore;
     newIncident.priority = triageResult.priority;
     newIncident.aiRationale = triageResult.aiRationale;
+
+    // Broadcast across real local P2P Mesh Channel to all nearby devices
+    hopRelayManager.originateSOS(newIncident);
 
     if (isSimulatedOffline) {
       const queuedPacket = saveToOfflineQueue(newIncident);
@@ -198,7 +207,7 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
           </div>
           <div>
             <h1 className="font-extrabold text-sm tracking-tight text-white">ResQ-Grid Civilian</h1>
-            <p className="text-[10px] text-slate-400">Emergency Mesh Node #892</p>
+            <p className="text-[10px] text-slate-400 font-mono">Mesh Node: {myNodeId}</p>
           </div>
         </div>
 
@@ -219,15 +228,15 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
 
       {/* Mesh Peer Connection Banner */}
       {isSimulatedOffline && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 mb-4 text-xs text-amber-200 flex items-center gap-2">
-          <Radio className="w-4 h-4 text-amber-400 animate-spin" />
-          <span>Cell towers down. <strong>{peerCount} peer devices</strong> connected via BLE/WiFi Mesh.</span>
+        <div className="bg-purple-950/40 border border-purple-500/30 rounded-xl p-2.5 mb-4 text-xs text-purple-200 flex items-center gap-2">
+          <Radio className="w-4 h-4 text-purple-400 animate-spin" />
+          <span>Hop-to-Hop Mesh Active: <strong>{peerCount} nearby phones</strong> ready to relay packets.</span>
         </div>
       )}
 
       {/* Active Broadcast Progress Banner */}
       {activeBroadcast && (
-        <div className="bg-gradient-to-r from-red-950/80 to-slate-900 border border-red-500/40 rounded-2xl p-4 mb-5 shadow-2xl">
+        <div className="bg-gradient-to-r from-red-950/80 to-slate-900 border border-red-500/40 rounded-2xl p-4 mb-5 shadow-2xl animate-fadeIn">
           <div className="flex items-center justify-between mb-2">
             <span className="px-2 py-0.5 rounded bg-red-600 text-white font-mono font-bold text-xs">
               LIVE BEACON TRANSMITTED
@@ -245,17 +254,17 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
             <div className="p-1.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
               ✓ Signal Logged
             </div>
-            <div className="p-1.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 animate-pulse">
-              ➔ Nearest Hub Linked
+            <div className="p-1.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 animate-pulse">
+              ➔ Mesh Relaying
             </div>
-            <div className="p-1.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-              Dispatching Squad
+            <div className="p-1.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40">
+              Gateway Linked
             </div>
           </div>
 
           {activeBroadcast.isQueuedOffline && (
             <p className="text-[11px] text-amber-300 mt-2">
-              ⚠️ Queued in local Mesh Outbox. Relaying across peer nodes to nearest gateway.
+              ⚡ Relayed across local mesh broadcast channel (5 hops remaining). Nearby devices receive signal in real-time!
             </p>
           )}
         </div>
@@ -516,7 +525,6 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
                   Delete
                 </button>
               </div>
-              {/* Real Audio Player */}
               <audio controls src={audioBlobUrl} className="w-full h-8 mt-1" />
             </div>
           )}
@@ -534,7 +542,7 @@ export default function MobileCivilianSOS({ onSubmitSOS, isSimulatedOffline, set
         </button>
         <p className="text-[11px] text-slate-400 text-center mt-2">
           {isSimulatedOffline 
-            ? '⚡ Relaying via Offline Mesh (No Internet Required)' 
+            ? '⚡ Relaying across P2P Mesh Hop2Hop Channel (No Internet Required)' 
             : '🔒 Encrypted transmission directly to NDRF & Disaster Command'}
         </p>
       </div>
