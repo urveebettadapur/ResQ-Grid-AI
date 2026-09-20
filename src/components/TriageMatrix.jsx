@@ -12,7 +12,10 @@ import {
   Search, 
   Filter,
   Sparkles,
-  Info
+  Info,
+  Camera,
+  Volume2,
+  Radio
 } from 'lucide-react';
 import { playDispatchAck, playSuccessChime } from '../services/audioAlerts';
 
@@ -26,13 +29,36 @@ export default function TriageMatrix({
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [viewPhotoModalUrl, setViewPhotoModalUrl] = useState(null);
 
-  const getPriorityBadge = (priority, score) => {
+  const getPriorityBadge = (priority, score, isLiveUser) => {
     switch (priority) {
       case 'CRITICAL':
-        return <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">CRITICAL ({score})</span>;
+        return (
+          <div className="flex items-center gap-1">
+            {isLiveUser && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/30 text-purple-300 border border-purple-400/40 animate-pulse">
+                LIVE
+              </span>
+            )}
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+              CRITICAL ({score})
+            </span>
+          </div>
+        );
       case 'HIGH':
-        return <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">HIGH ({score})</span>;
+        return (
+          <div className="flex items-center gap-1">
+            {isLiveUser && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/30 text-purple-300 border border-purple-400/40 animate-pulse">
+                LIVE
+              </span>
+            )}
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+              HIGH ({score})
+            </span>
+          </div>
+        );
       case 'MODERATE':
         return <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">MODERATE ({score})</span>;
       case 'RESCUED':
@@ -146,7 +172,7 @@ export default function TriageMatrix({
                     </div>
                   </div>
                   <div>
-                    {getPriorityBadge(incident.priority, incident.urgencyScore)}
+                    {getPriorityBadge(incident.priority, incident.urgencyScore, incident.isLiveUserSOS)}
                   </div>
                 </div>
 
@@ -166,11 +192,50 @@ export default function TriageMatrix({
                   )}
                 </div>
 
-                {/* Medical Condition Snippet */}
+                {/* Medical Condition */}
                 {incident.medicalCondition && (
                   <p className="text-[11px] text-red-300 mt-1 line-clamp-1">
                     ⚠️ {incident.medicalCondition}
                   </p>
+                )}
+
+                {/* REAL Evidence Badges: Photo Thumbnail & Voice Note Player */}
+                {(incident.photo || incident.audioNoteUrl) && (
+                  <div className="mt-2 p-2 rounded-lg bg-slate-900/90 border border-slate-700/70 flex flex-col gap-2">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Attached Media Evidence
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {incident.photo && (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewPhotoModalUrl(incident.photo);
+                          }}
+                          className="relative group cursor-pointer"
+                        >
+                          <img 
+                            src={incident.photo} 
+                            alt="Damage evidence" 
+                            className="w-12 h-12 rounded-lg object-cover border border-slate-600 group-hover:scale-105 transition"
+                          />
+                          <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[9px] text-white font-bold">
+                            View
+                          </div>
+                        </div>
+                      )}
+
+                      {incident.audioNoteUrl && (
+                        <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                          <div className="text-[10px] text-red-300 font-semibold mb-0.5 flex items-center gap-1">
+                            <Volume2 className="w-3 h-3 text-red-400" />
+                            <span>Victim Voice Note</span>
+                          </div>
+                          <audio controls src={incident.audioNoteUrl} className="w-full h-7" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Action Buttons & AI Rationale Toggle */}
@@ -239,6 +304,23 @@ export default function TriageMatrix({
           })
         )}
       </div>
+
+      {/* Photo Enlarger Modal */}
+      {viewPhotoModalUrl && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setViewPhotoModalUrl(null)}
+        >
+          <div className="relative max-w-xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 p-2">
+            <img 
+              src={viewPhotoModalUrl} 
+              alt="Expanded Damage Evidence" 
+              className="max-w-full max-h-[75vh] object-contain rounded-xl mx-auto" 
+            />
+            <p className="text-center text-xs text-slate-400 mt-2 font-mono">Click anywhere to close</p>
+          </div>
+        </div>
+      )}
 
     </div>
   );

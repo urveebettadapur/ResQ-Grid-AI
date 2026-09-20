@@ -20,15 +20,34 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Checks if a line segment intersects with a hazard zone (simplified bounding box check)
+ * Finds the geographically nearest Relief Hub to an incident
  */
-function isHazardousSegment(p1, p2, hazard) {
-  if (!hazard.location) return false;
-  const [hzLat, hzLng] = hazard.location;
-  // Distance from hazard point to line segment midpoint
-  const midLat = (p1[0] + p2[0]) / 2;
-  const midLng = (p1[1] + p2[1]) / 2;
-  return calculateDistance(midLat, midLng, hzLat, hzLng) < 0.6; // 600m hazard radius
+export function findNearestReliefHub(incidentLocation, reliefHubs = []) {
+  if (!incidentLocation || reliefHubs.length === 0) return null;
+
+  let nearestHub = reliefHubs[0];
+  let minDistance = calculateDistance(
+    incidentLocation[0],
+    incidentLocation[1],
+    nearestHub.location[0],
+    nearestHub.location[1]
+  );
+
+  for (let i = 1; i < reliefHubs.length; i++) {
+    const hub = reliefHubs[i];
+    const dist = calculateDistance(
+      incidentLocation[0],
+      incidentLocation[1],
+      hub.location[0],
+      hub.location[1]
+    );
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearestHub = hub;
+    }
+  }
+
+  return { nearestHub, distanceKm: minDistance };
 }
 
 /**
@@ -39,7 +58,7 @@ export function calculateSafeRoute(originHub, targetIncident, scenario) {
 
   const start = originHub.location;
   const end = targetIncident.location;
-  const hazards = scenario.blockedHazards || [];
+  const hazards = scenario?.blockedHazards || [];
 
   // Generate intermediate safe waypoints
   const waypoints = [start];
@@ -57,7 +76,7 @@ export function calculateSafeRoute(originHub, targetIncident, scenario) {
 
     // Check against hazards
     hazards.forEach(h => {
-      if (calculateDistance(lat, lng, h.location[0], h.location[1]) < 0.8) {
+      if (h.location && calculateDistance(lat, lng, h.location[0], h.location[1]) < 0.8) {
         hasObstacle = true;
         if (!avoidedHazards.includes(h.title)) {
           avoidedHazards.push(h.title);
@@ -84,7 +103,7 @@ export function calculateSafeRoute(originHub, targetIncident, scenario) {
     );
   }
 
-  // Estimated travel time (average rescue boat speed ~22 km/h + terrain delay)
+  // Estimated travel time (average rescue boat/ambulance speed ~24 km/h + terrain delay)
   const avgSpeedKmh = 24;
   const etaMinutes = Math.max(Math.round((totalDistKm / avgSpeedKmh) * 60) + (hasObstacle ? 3 : 0), 2);
 

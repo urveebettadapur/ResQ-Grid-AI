@@ -10,16 +10,16 @@ import SitrepExport from './components/SitrepExport';
 import MobileQrModal from './components/MobileQrModal';
 
 import { DISASTER_SCENARIOS } from './services/disasterData';
-import { calculateSafeRoute } from './services/routingEngine';
+import { calculateSafeRoute, findNearestReliefHub } from './services/routingEngine';
 import { calculateUrgencyScore, rankIncidentsByUrgency } from './services/triageEngine';
 import { playDispatchAck, playSuccessChime, playSosAlert } from './services/audioAlerts';
 
 export default function App() {
-  // Check if URL has ?mode=mobile (e.g. from QR scan)
   const [viewMode, setViewMode] = useState('command'); // 'command' | 'mobile'
-  const [activeScenarioKey, setActiveScenarioKey] = useState('flood_brahmaputra');
+  // Default to Bengaluru Urban Scenario
+  const [activeScenarioKey, setActiveScenarioKey] = useState('bengaluru_urban');
   
-  const currentScenario = DISASTER_SCENARIOS[activeScenarioKey] || DISASTER_SCENARIOS.flood_brahmaputra;
+  const currentScenario = DISASTER_SCENARIOS[activeScenarioKey] || DISASTER_SCENARIOS.bengaluru_urban;
 
   const [incidents, setIncidents] = useState(currentScenario.initialIncidents || []);
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -55,7 +55,19 @@ export default function App() {
   const handleSubmitSOS = (newIncident) => {
     playSosAlert();
     setIncidents(prev => rankIncidentsByUrgency([newIncident, ...prev]));
+    
+    // SMART LOCAL AUTO-ANCHOR: Find the nearest relief hub in the current sector
+    const nearest = findNearestReliefHub(newIncident.location, currentScenario.reliefHubs || []);
+    const bestHub = nearest?.nearestHub || currentScenario.reliefHubs?.[0];
+    
+    setSelectedHub(bestHub);
     setSelectedIncident(newIncident);
+
+    // Compute route with nearest hub immediately
+    if (bestHub && newIncident) {
+      const route = calculateSafeRoute(bestHub, newIncident, currentScenario);
+      setActiveRoute(route);
+    }
   };
 
   // Sync offline packets flushed from mesh
@@ -67,11 +79,15 @@ export default function App() {
     });
   };
 
-  // Select an incident & auto-calculate initial route
+  // Select an incident & auto-calculate safe route with nearest hub
   const handleSelectIncident = (incident) => {
     setSelectedIncident(incident);
-    if (selectedHub && incident) {
-      const route = calculateSafeRoute(selectedHub, incident, currentScenario);
+    const nearest = findNearestReliefHub(incident.location, currentScenario.reliefHubs || []);
+    const hubToUse = nearest?.nearestHub || selectedHub || currentScenario.reliefHubs?.[0];
+    
+    if (hubToUse) {
+      setSelectedHub(hubToUse);
+      const route = calculateSafeRoute(hubToUse, incident, currentScenario);
       setActiveRoute(route);
     }
   };
@@ -93,14 +109,17 @@ export default function App() {
         return {
           ...inc,
           status: 'DISPATCHED',
-          assignedUnit: 'Boat Unit Bravo-3 (NDRF)'
+          assignedUnit: 'Rescue Unit (SDRF / NDRF)'
         };
       }
       return inc;
     }));
 
-    if (selectedHub) {
-      const route = calculateSafeRoute(selectedHub, incident, currentScenario);
+    const nearest = findNearestReliefHub(incident.location, currentScenario.reliefHubs || []);
+    const hubToUse = nearest?.nearestHub || selectedHub;
+    if (hubToUse) {
+      setSelectedHub(hubToUse);
+      const route = calculateSafeRoute(hubToUse, incident, currentScenario);
       setActiveRoute(route);
     }
   };
