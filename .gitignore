@@ -11,6 +11,10 @@ __pycache__/
 # IDE settings
 .vscode/
 
+# Dependencies
+node_modules/
+.vite/
+
 # Distribution and build files
 dist/
 build/
